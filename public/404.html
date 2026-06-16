@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Página no encontrada - Albergue Municipal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --primary: #00E3D7;
+      --primary-dark: #00968F;
+      --primary-light: #C6E3E1;
+      --accent: #00D5CA;
+      --bg-color: #f0f7f6;
+      --surface-color: #ffffff;
+      --text-primary: #112c29;
+      --text-secondary: #487270;
+      --border-color: #d1e5e3;
+      --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      --font-family: 'Outfit', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-color: #0b1716;
+        --surface-color: #122423;
+        --text-primary: #e6f7f5;
+        --text-secondary: #8cb5b1;
+        --border-color: #223f3c;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background-color: var(--bg-color);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justifyContent: center;
+      padding: 24px;
+      transition: background-color 0.3s, color 0.3s;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+      animation: fadeInUp 0.4s ease-out;
+    }
+
+    .logo {
+      height: 64px;
+      width: auto;
+      object-fit: contain;
+      margin-bottom: 24px;
+    }
+
+    .card {
+      background-color: var(--surface-color);
+      border-radius: 20px;
+      border: 1.5px solid var(--border-color);
+      padding: 40px 32px;
+      box-shadow: 0 10px 30px rgba(0, 150, 143, 0.05);
+      transition: var(--transition-smooth);
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 16px 40px rgba(0, 150, 143, 0.08);
+    }
+
+    .error-code {
+      font-size: 5.5rem;
+      font-weight: 800;
+      line-height: 1;
+      color: var(--primary-dark);
+      background: linear-gradient(135deg, var(--accent) 0%, var(--primary-dark) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 16px;
+      letter-spacing: -2px;
+    }
+
+    .title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: var(--text-primary);
+    }
+
+    .description {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justifyContent: center;
+      gap: 8px;
+      font-family: var(--font-family);
+      font-weight: 600;
+      font-size: 0.92rem;
+      text-decoration: none;
+      padding: 12px 28px;
+      border-radius: 24px;
+      background-color: var(--primary-dark);
+      color: #ffffff;
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 4px 12px rgba(0, 150, 143, 0.2);
+      transition: var(--transition-smooth);
+    }
+
+    .btn:hover {
+      background-color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0, 213, 202, 0.35);
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+      box-shadow: 0 2px 4px rgba(0, 150, 143, 0.1);
+    }
+
+    .illustration {
+      width: 140px;
+      height: auto;
+      margin: 0 auto 24px auto;
+      display: block;
+      opacity: 0.85;
+      color: var(--primary-dark);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(24px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <img src="/logoSLRC.png" alt="Ayuntamiento SLRC" class="logo" onerror="this.style.display='none'">
+    
+    <div class="card">
+      <svg class="illustration" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"></path>
+      </svg>
+      
+      <div class="error-code">404</div>
+      <h1 class="title">Enlace no encontrado</h1>
+      <p class="description">La página que busca no existe, ha cambiado de dirección o no tiene los permisos suficientes para verla.</p>
+      
+      <a href="/" class="btn">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Volver al Panel
+      </a>
+    </div>
+  </div>
+
+</body>
+</html>
