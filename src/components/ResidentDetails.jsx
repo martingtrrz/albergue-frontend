@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import imagenDefault from '../assets/usuarioVacio.png';
+import CountrySelector from './CountrySelector';
+
 export default function ResidentDetails({ resident, onUpdate, onArchive, onRestore, onCancel, countries }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedData, setEditedData] = useState({ ...resident });
@@ -15,6 +17,21 @@ export default function ResidentDetails({ resident, onUpdate, onArchive, onResto
   );
     // Estado para nuestro modal de confirmacion
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, type: null }); // type: 'archive' | 'restore'
+
+  const renderError = (field) => {
+    if (!errors[field]) return null;
+    return (
+      <span style={{ ...styles.errorText, display: 'inline-flex', alignItems: 'center', gap: '4px', marginTop: '6px' }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0 }}>
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        {errors[field]}
+      </span>
+    );
+  };
+
   useEffect(() => {
     setEditedData({ ...resident });
     setFotoPreview(
@@ -24,11 +41,14 @@ export default function ResidentDetails({ resident, onUpdate, onArchive, onResto
   );
     setErrors({});
   }, [resident]);
+
   if (!resident) return null;
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setEditedData(prev => ({ ...prev, [name]: value }));
   };
+
   const handleFotoChange = (e) => {
     const file = e.target.files[0];
     setFotoError('');
@@ -38,72 +58,86 @@ export default function ResidentDetails({ resident, onUpdate, onArchive, onResto
       setFotoPreview(resident?.fotoUrl ? `https://martin.utportfolio.cloud/api/${resident.fotoUrl}` : imagenDefault);
       return;
     }
+
     const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
     if (!validTypes.includes(file.type)) {
       setFotoError('Formato invalido. Solo JPG o PNG.');
       e.target.value = '';
       return;
     }
+
     const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
       setFotoError('La imagen supera los 5MB.');
       e.target.value = ''; 
       return;
     }
+
     setFotoFile(file);
     setFotoPreview(URL.createObjectURL(file));
   };
+
 const handleSave = () => {
     const newErrors = {};
+
     // 1. Validar Nombre
     const nombreTrim = (editedData.nombre || '').trim();
     if (!nombreTrim) {
-      newErrors.nombre = 'El nombre es obligatorio';
+      newErrors.nombre = 'El nombre completo es obligatorio.';
     } else if (nombreTrim.length < 3 || nombreTrim.length > 70) {
-      newErrors.nombre = 'El nombre debe tener entre 3 y 70 caracteres';
+      newErrors.nombre = 'El nombre debe tener entre 3 y 70 caracteres.';
     } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombreTrim)) {
-      newErrors.nombre = 'El nombre solo debe contener letras y espacios';
+      newErrors.nombre = 'El nombre solo puede contener letras y espacios (sin números ni símbolos).';
     }
+
     // 2. Validar Edad
     const edadNum = Number(editedData.edad);
     if (editedData.edad === '' || isNaN(edadNum)) {
-      newErrors.edad = 'La edad es obligatoria';
+      newErrors.edad = 'La edad es obligatoria.';
     } else if (!Number.isInteger(edadNum) || edadNum < 0 || edadNum > 120) {
-      newErrors.edad = 'La edad debe ser un número entero entre 0 y 120';
+      newErrors.edad = 'La edad debe ser un número entero entre 0 y 120 años.';
     }
+
     // 3. Validar Nacionalidad
     if (!editedData.nacionalidad || !editedData.nacionalidad.trim()) {
-      newErrors.nacionalidad = 'La nacionalidad es obligatoria';
+      newErrors.nacionalidad = 'La nacionalidad es obligatoria. Seleccione un país de la lista.';
     }
+
     // 4. Validar Contacto de Emergencia (Opcional, pero con formato si se ingresa)
     const contactoTrim = (editedData.contactoEmergencia || '').trim();
     if (contactoTrim && !/^[0-9+\-\s()]{7,20}$/.test(contactoTrim)) {
-      newErrors.contactoEmergencia = 'Formato de teléfono inválido';
+      newErrors.contactoEmergencia = 'El teléfono debe tener entre 7 y 20 dígitos y solo puede incluir números, espacios, \'+\', \'-\' o \'()\'.';
     }
+
     // 5. Validar Destino y Condición (Límites de texto para no romper la BD)
     if (editedData.destino && editedData.destino.length > 150) {
-      newErrors.destino = 'El texto es demasiado largo (máx 150 caracteres)';
+      newErrors.destino = 'El destino planeado no puede superar los 150 caracteres.';
     }
     if (editedData.condicion && editedData.condicion.length > 150) {
-      newErrors.condicion = 'El texto es demasiado largo (máx 150 caracteres)';
+      newErrors.condicion = 'Las condiciones o comentarios no pueden superar los 150 caracteres.';
     }
+
     // 6. Validar Fechas (Viaje Programado vs Ingreso)
     if (editedData.viajeProgramado) {
       const fechaIngresoStr = editedData.fechaIngreso ? editedData.fechaIngreso.split('T')[0] : '';
       const viajeProgramadoStr = editedData.viajeProgramado.split('T')[0];
       if (fechaIngresoStr && viajeProgramadoStr < fechaIngresoStr) {
-        newErrors.viajeProgramado = 'El viaje no puede ser anterior al ingreso';
+        newErrors.viajeProgramado = 'La fecha de viaje no puede ser anterior a la fecha de ingreso al albergue.';
       }
     }
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
+
     setErrors({});
     onUpdate(editedData, fotoFile);
     setIsEditing(false);
   };
+
   const getStatusColor = (estado) => estado === 'activo' ? 'var(--secondary)' : 'var(--text-secondary)';
+
   return (
     <div className="fade-in" style={styles.container}>
       
@@ -174,6 +208,7 @@ const handleSave = () => {
           )}
         </div>
       </div>
+
       {/* Contenido Principal */}
       <div style={styles.card}>
         <div style={styles.profileSection} className="profile-section-responsive">
@@ -196,11 +231,12 @@ const handleSave = () => {
                {fotoError && <span style={styles.errorText}>{fotoError}</span>}
             </div>
           )}
+
           <div style={styles.profileInfo}>
             {isEditing ? (
               <>
                 <input type="text" name="nombre" maxLength="70" value={editedData.nombre} onChange={handleInputChange} style={styles.inputTitle} className="input-title-responsive" />
-                {errors.nombre && <span style={{ ...styles.errorText, display: 'block', marginBottom: '8px', textAlign: 'center' }}>{errors.nombre}</span>}
+                {renderError('nombre')}
               </>
             ) : (
               <h3 style={styles.residentName}>{resident.nombre}</h3>
@@ -208,6 +244,7 @@ const handleSave = () => {
             <p style={styles.residentMeta}>ID Sistema: #{resident.id} • Registrado: {new Date(resident.fechaIngreso).toLocaleDateString()}</p>
           </div>
         </div>
+
         <div style={styles.grid}>
           {/* Datos Personales */}
           <div style={styles.section}>
@@ -218,13 +255,13 @@ const handleSave = () => {
               </svg>
               Datos Personales
             </h4>
-            <div style={styles.fieldGroup}>
+            <div className="grid-2-cols">
               <div style={styles.field}>
                 <label style={styles.label}>Edad</label>
                 {isEditing ? (
                   <>
                     <input type="number" name="edad" min="0" max="120" step="1" value={editedData.edad} onChange={handleInputChange} style={styles.input} />
-                    {errors.edad && <span style={styles.errorText}>{errors.edad}</span>}
+                    {renderError('edad')}
                   </>
                 ) : <p style={styles.value}>{resident.edad} anos</p>}
               </div>
@@ -238,20 +275,27 @@ const handleSave = () => {
                   </select>
                 ) : <p style={styles.value}>{resident.sexo}</p>}
               </div>
-              <div style={styles.field}>
+              <div style={styles.field} className="span-2">
                 <label style={styles.label}>Nacionalidad</label>
                 {isEditing ? (
                   <>
-                    <select name="nacionalidad" value={editedData.nacionalidad} onChange={handleInputChange} style={styles.select}>
-                      <option value="">Seleccione pais...</option>
-                      {countries?.map(c => <option key={c.code} value={c.name}>{c.name}</option>)}
-                    </select>
-                    {errors.nacionalidad && <span style={styles.errorText}>{errors.nacionalidad}</span>}
+                    <CountrySelector
+                      countries={countries}
+                      value={editedData.nacionalidad || ''}
+                      onChange={(countryName) => {
+                        setEditedData(prev => ({ ...prev, nacionalidad: countryName }));
+                        if (errors.nacionalidad) setErrors(prev => ({ ...prev, nacionalidad: '' }));
+                      }}
+                      hasError={!!errors.nacionalidad}
+                      inputStyle={{}}
+                    />
+                    {renderError('nacionalidad')}
                   </>
                 ) : <p style={styles.value}>{resident.nacionalidad}</p>}
               </div>
             </div>
           </div>
+
           {/* Grupo Familiar */}
           <div style={styles.section}>
             <h4 style={styles.sectionTitle}>
@@ -263,17 +307,23 @@ const handleSave = () => {
               </svg>
               Grupo Familiar
             </h4>
-            <div style={styles.fieldGroup}>
+            <div className="grid-2-cols">
               <div style={styles.field}>
                 <label style={styles.label}>ID de Familia</label>
                 {isEditing ? <input type="text" name="familiaId" value={editedData.familiaId || ''} onChange={handleInputChange} style={styles.input} placeholder="Opcional" /> : <p style={styles.value}>{resident.familiaId || 'Sin asignar'}</p>}
               </div>
               <div style={styles.field}>
                 <label style={styles.label}>Contacto de Emergencia</label>
-                {isEditing ? <input type="text" name="contactoEmergencia" maxLength="15" value={editedData.contactoEmergencia || ''} onChange={handleInputChange} style={styles.input} /> : <p style={styles.value}>{resident.contactoEmergencia || 'No registrado'}</p>}
+                {isEditing ? (
+                  <>
+                    <input type="text" name="contactoEmergencia" maxLength="15" value={editedData.contactoEmergencia || ''} onChange={handleInputChange} style={styles.input} />
+                    {renderError('contactoEmergencia')}
+                  </>
+                ) : <p style={styles.value}>{resident.contactoEmergencia || 'No registrado'}</p>}
               </div>
             </div>
           </div>
+
           {/* Estado Medico */}
           <div style={styles.section}>
             <h4 style={styles.sectionTitle}>
@@ -283,9 +333,15 @@ const handleSave = () => {
               Condicion o Estado Medico
             </h4>
             <div style={styles.field}>
-              {isEditing ? <textarea name="condicion" maxLength="150" value={editedData.condicion || ''} onChange={handleInputChange} style={styles.textarea} rows="3" /> : <p style={styles.value}>{resident.condicion || 'Ninguna registrada'}</p>}
+              {isEditing ? (
+                <>
+                  <textarea name="condicion" maxLength="150" value={editedData.condicion || ''} onChange={handleInputChange} style={styles.textarea} rows="3" />
+                  {renderError('condicion')}
+                </>
+              ) : <p style={styles.value}>{resident.condicion || 'Ninguna registrada'}</p>}
             </div>
           </div>
+
           {/* Estatus Migratorio */}
           <div style={styles.section}>
             <h4 style={styles.sectionTitle}>
@@ -296,17 +352,33 @@ const handleSave = () => {
               </svg>
               Estatus y Destino
             </h4>
-            <div style={styles.fieldGroup}>
+            <div className="grid-2-cols">
               <div style={styles.field}>
                 <label style={styles.label}>Destino Planeado</label>
-                {isEditing ? <input type="text" name="destino" maxLength="100" value={editedData.destino || ''} onChange={handleInputChange} style={styles.input} /> : <p style={styles.value}>{resident.destino || 'No especificado'}</p>}
+                {isEditing ? (
+                  <>
+                    <CountrySelector
+                      countries={countries}
+                      value={editedData.destino || ''}
+                      onChange={(countryName) => {
+                        setEditedData(prev => ({ ...prev, destino: countryName }));
+                        if (errors.destino) setErrors(prev => ({ ...prev, destino: '' }));
+                      }}
+                      hasError={!!errors.destino}
+                      inputStyle={{}}
+                    />
+                    {renderError('destino')}
+                  </>
+                ) : (
+                  <p style={styles.value}>{resident.destino || 'No especificado'}</p>
+                )}
               </div>
               <div style={styles.field}>
                 <label style={styles.label}>Fecha de Viaje Programada</label>
                 {isEditing ? (
                   <>
                     <input type="date" name="viajeProgramado" value={editedData.viajeProgramado || ''} onChange={handleInputChange} style={styles.input} />
-                    {errors.viajeProgramado && <span style={styles.errorText}>{errors.viajeProgramado}</span>}
+                    {renderError('viajeProgramado')}
                   </>
                 ) : <p style={styles.value}>{resident.viajeProgramado ? new Date(resident.viajeProgramado).toLocaleDateString() : 'Sin programar'}</p>}
               </div>
@@ -314,6 +386,7 @@ const handleSave = () => {
           </div>
         </div>
       </div>
+
       {/* Modal de Confirmacion */}
       {confirmModal.isOpen && (
         <div style={styles.modalOverlay}>
@@ -352,8 +425,11 @@ const handleSave = () => {
       )}
     </div>
     </div>
+
   );
 }
+
+
 const styles = {
   container: {
     padding: '24px',
