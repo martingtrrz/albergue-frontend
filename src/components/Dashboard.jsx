@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { calculateDaysRefuged } from '../mockData';
 import { exportToPDF } from '../utils';
+import imagenDefault from '../assets/usuarioVacio.png';
 
 export default function Dashboard({ residents, onViewChange, countries = [] }) {
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
@@ -264,9 +265,9 @@ export default function Dashboard({ residents, onViewChange, countries = [] }) {
                     
                     {countryObj && (
                       <img 
-                        src={countryObj.flag} 
-                        alt={`Bandera de ${countryObj.country}`} 
-                        style={styles.cardHeaderFlag} 
+                        src={resident.fotoUrl ? `https://martin.utportfolio.cloud/api/${resident.fotoUrl}` : imagenDefault} 
+                        alt="Foto" 
+                        style={styles.tableAvatar} // O la clase CSS que utilices
                       />
                     )}
 

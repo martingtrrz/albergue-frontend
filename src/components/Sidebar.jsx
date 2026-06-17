@@ -1,4 +1,6 @@
 import React from 'react';
+import logoAlbergue from '../assets/logoSLRC.png';
+import imagenDefault from '../assets/usuarioVacio.png';
 
 export default function Sidebar({ 
   totalCount, 
