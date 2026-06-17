@@ -8,15 +8,21 @@ export default function ResidentDetails({ resident, onUpdate, onArchive, onResto
   
   // Estados para la nueva foto en modo edicion
   const [fotoFile, setFotoFile] = useState(null);
-const [fotoPreview, setFotoPreview] = useState(resident?.fotoUrl ? `https://martin.utportfolio.cloud/api/${resident.fotoUrl}` : imagenDefault);  const [fotoError, setFotoError] = useState('');
-
-  // Estado para nuestro modal de confirmacion
+  const [fotoPreview, setFotoPreview] = useState(
+    resident?.fotoUrl 
+      ? (resident.fotoUrl.startsWith('http') ? resident.fotoUrl : `https://martin.utportfolio.cloud/api/${resident.fotoUrl}`) 
+      : imagenDefault
+  );
+    // Estado para nuestro modal de confirmacion
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, type: null }); // type: 'archive' | 'restore'
 
   useEffect(() => {
     setEditedData({ ...resident });
-    setFotoPreview(resident?.fotoUrl ? `https://martin.utportfolio.cloud/api/${resident.fotoUrl}` : imagenDefault);
-    setFotoFile(null);
+    setFotoPreview(
+    resident?.fotoUrl 
+      ? (resident.fotoUrl.startsWith('http') ? resident.fotoUrl : `https://martin.utportfolio.cloud/api/${resident.fotoUrl}`) 
+      : imagenDefault
+  );
     setErrors({});
   }, [resident]);
 
@@ -171,7 +177,7 @@ const handleSave = () => {
             </>
           ) : (
             <>
-              <button onClick={() => { setIsEditing(false); setEditedData({...resident}); setFotoPreview(resident?.fotoUrl ? `https://martin.utportfolio.cloud/api/${resident.fotoUrl}` : imagenDefault); setFotoFile(null); setErrors({}); }} style={styles.cancelBtn}>
+              <button onClick={() => { setIsEditing(false); setEditedData({...resident}); setFotoPreview(resident?.fotoUrl ? (resident.fotoUrl.startsWith('http') ? resident.fotoUrl : `https://martin.utportfolio.cloud/api/${resident.fotoUrl}`) : imagenDefault); setFotoFile(null); setErrors({}); }} style={styles.cancelBtn}>
                 Cancelar
               </button>
               <button onClick={handleSave} style={styles.saveBtn}>

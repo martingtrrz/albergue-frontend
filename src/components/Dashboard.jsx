@@ -279,7 +279,9 @@ export default function Dashboard({ residents, onViewChange, countries = [] }) {
                     {/* Photo area */}
                     <div style={styles.photoContainer}>
                       <img 
-                        src={resident.fotoUrl ? `https://martin.utportfolio.cloud/api/${resident.fotoUrl}` : imagenDefault}
+                        src={resident.fotoUrl 
+                          ? (resident.fotoUrl.startsWith('http') ? resident.fotoUrl : `https://martin.utportfolio.cloud/api/${resident.fotoUrl}`) 
+                          : imagenDefault}
                         alt={resident.nombre} 
                         style={styles.photo} 
                       />
