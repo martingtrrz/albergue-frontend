@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import CountrySelector from './CountrySelector';
 // 1. IMPORTACIÓN DE LA IMAGEN (Soluciona el error de Vite)
 import imagenDefault from '../assets/usuarioVacio.png';
-
 export default function RegisterResident({ onSave, onCancel, currentCapacity, maxCapacity = 50, countries = [], familias, onCrearFamilia }) {
   const [formData, setFormData] = useState({
     nombre: '',
@@ -16,9 +15,7 @@ export default function RegisterResident({ onSave, onCancel, currentCapacity, ma
     contactoEmergencia: '',
     viajeProgramado: ''
   });
-
   const [errors, setErrors] = useState({});
-
   const [fotoFile, setFotoFile] = useState(null);
   // 2. USO DE LA VARIABLE IMPORTADA SIN COMILLAS
   const [fotoPreview, setFotoPreview] = useState(imagenDefault);
@@ -26,7 +23,6 @@ export default function RegisterResident({ onSave, onCancel, currentCapacity, ma
   const [showNuevaFamiliaForm, setShowNuevaFamiliaForm] = useState(false);
   const [nuevoCodigoFamilia, setNuevoCodigoFamilia] = useState('');
   const [nuevasNotasFamilia, setNuevasNotasFamilia] = useState('');
-
   const handleFotoChange = (e) => {
     const file = e.target.files[0];
     setFotoError('');
@@ -37,7 +33,6 @@ export default function RegisterResident({ onSave, onCancel, currentCapacity, ma
       setFotoPreview(imagenDefault); // Cambio aquí
       return;
     }
-
     // Validar formato
     const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
     if (!validTypes.includes(file.type)) {
@@ -47,7 +42,6 @@ export default function RegisterResident({ onSave, onCancel, currentCapacity, ma
       e.target.value = ''; 
       return;
     }
-
     // Validar peso máximo (5MB)
     const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
@@ -57,53 +51,43 @@ export default function RegisterResident({ onSave, onCancel, currentCapacity, ma
       e.target.value = ''; 
       return;
     }
-
     setFotoFile(file);
     setFotoPreview(URL.createObjectURL(file));
   };
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: '' }));
   };
-
   const handleNacionalidad = (countryName) => {
     setFormData((prev) => ({ ...prev, nacionalidad: countryName }));
     if (errors.nacionalidad) setErrors((prev) => ({ ...prev, nacionalidad: '' }));
   };
-
   const handleSubmit = (e) => {
     e.preventDefault();
-
     if (currentCapacity >= maxCapacity) {
       alert('El albergue ha alcanzado su capacidad máxima (50/50). Dé de baja a un residente activo antes de ingresar a otra persona.');
       return;
     }
-
     const newErrors = {};
-
     // 3. VALIDACIONES ESTRICTAS JS
     const nombreTrim = formData.nombre.trim();
     if (!nombreTrim) {
       newErrors.nombre = 'El nombre es obligatorio';
-    } else if (nombreTrim.length < 3 || nombreTrim.length > 100) {
-      newErrors.nombre = 'El nombre debe tener entre 3 y 100 caracteres';
+    } else if (nombreTrim.length < 3 || nombreTrim.length > 70) {
+      newErrors.nombre = 'El nombre debe tener entre 3 y 70 caracteres';
     } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombreTrim)) {
       newErrors.nombre = 'El nombre solo debe contener letras y espacios';
     }
-
     const edadNum = Number(formData.edad);
     if (formData.edad === '' || isNaN(edadNum)) {
       newErrors.edad = 'La edad es obligatoria';
     } else if (!Number.isInteger(edadNum) || edadNum < 0 || edadNum > 120) {
       newErrors.edad = 'La edad debe ser un número entero entre 0 y 120';
     }
-
     if (!formData.nacionalidad || !formData.nacionalidad.trim()) {
       newErrors.nacionalidad = 'La nacionalidad es obligatoria';
     }
-
     if (!formData.fechaIngreso) {
       newErrors.fechaIngreso = 'La fecha de ingreso es obligatoria';
     } else {
@@ -112,41 +96,33 @@ export default function RegisterResident({ onSave, onCancel, currentCapacity, ma
         newErrors.fechaIngreso = 'La fecha de ingreso no puede ser futura';
       }
     }
-
     const contactoTrim = (formData.contactoEmergencia || '').trim();
     if (contactoTrim && !/^[0-9+\-\s()]{7,20}$/.test(contactoTrim)) {
       newErrors.contactoEmergencia = 'Formato de teléfono inválido';
     }
-
     if (formData.destino && formData.destino.length > 150) {
       newErrors.destino = 'El texto es demasiado largo (máx 150 caracteres)';
     }
-
-    if (formData.condicion && formData.condicion.length > 300) {
-      newErrors.condicion = 'El texto es demasiado largo (máx 300 caracteres)';
+    if (formData.condicion && formData.condicion.length > 150) {
+      newErrors.condicion = 'El texto es demasiado largo (máx 150 caracteres)';
     }
-
     if (formData.viajeProgramado) {
       if (formData.fechaIngreso && formData.viajeProgramado < formData.fechaIngreso) {
         newErrors.viajeProgramado = 'La fecha de viaje no puede ser anterior al ingreso';
       }
     }
-
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
-
     const residentToSave = {
       ...formData,
       id: Date.now().toString(),
       edad: Number(formData.edad),
       estado: 'activo'
     };
-
     onSave(residentToSave, fotoFile);
   };
-
   // Función auxiliar para renderizar los errores con el icono SVG
   const renderError = (field) => {
     if (!errors[field]) return null;
@@ -161,7 +137,6 @@ export default function RegisterResident({ onSave, onCancel, currentCapacity, ma
       </span>
     );
   };
-
   return (
     <div style={styles.container} className="view-container mobile-padding">
       <div style={styles.header}>
@@ -204,7 +179,6 @@ export default function RegisterResident({ onSave, onCancel, currentCapacity, ma
           </div>
         </div>
       </div>
-
       <form onSubmit={handleSubmit} style={styles.form}>
         <div style={styles.section}>
           <h3 style={styles.sectionTitle}>1. Datos Personales</h3>
@@ -215,7 +189,7 @@ export default function RegisterResident({ onSave, onCancel, currentCapacity, ma
                 type="text"
                 id="nombre"
                 name="nombre"
-                maxLength="100" // Restricción HTML
+                maxLength="70" // Restricción HTML
                 value={formData.nombre}
                 onChange={handleChange}
                 className="form-control"
@@ -224,7 +198,6 @@ export default function RegisterResident({ onSave, onCancel, currentCapacity, ma
               />
               {renderError('nombre')}
             </div>
-
             <div style={styles.formGroup}>
               <label htmlFor="sexo" style={styles.label}>Sexo *</label>
               <select
@@ -239,7 +212,6 @@ export default function RegisterResident({ onSave, onCancel, currentCapacity, ma
                 <option value="Otro">Otro</option>
               </select>
             </div>
-
             <div style={styles.formGroup}>
               <label htmlFor="edad" style={styles.label}>Edad (años) *</label>
               <input
@@ -257,7 +229,6 @@ export default function RegisterResident({ onSave, onCancel, currentCapacity, ma
               />
               {renderError('edad')}
             </div>
-
             <div style={styles.formGroup}>
               <label style={styles.label}>Nacionalidad *</label>
               <CountrySelector
@@ -269,7 +240,6 @@ export default function RegisterResident({ onSave, onCancel, currentCapacity, ma
               />
               {renderError('nacionalidad')}
             </div>
-
             <div style={styles.field}>
               <label style={styles.fieldLabel}>Familia / Grupo</label>
               <select
@@ -295,7 +265,6 @@ export default function RegisterResident({ onSave, onCancel, currentCapacity, ma
                 </option>
               </select>
             </div>
-
             {showNuevaFamiliaForm && (
               <div style={styles.newFamilyBox} className="fade-in">
                 <h4 style={styles.newFamilyTitle}>Datos de la Nueva Familia</h4>
@@ -352,7 +321,6 @@ export default function RegisterResident({ onSave, onCancel, currentCapacity, ma
             )}
           </div>
         </div>
-
         <div style={styles.section}>
           <h3 style={styles.sectionTitle}>2. Expediente e Ingreso</h3>
           <div className="grid-3-cols">
@@ -369,7 +337,6 @@ export default function RegisterResident({ onSave, onCancel, currentCapacity, ma
               />
               {renderError('fechaIngreso')}
             </div>
-
             <div style={styles.formGroup}>
               <label htmlFor="contactoEmergencia" style={styles.label}>Contacto de Emergencia</label>
               <input
@@ -385,13 +352,12 @@ export default function RegisterResident({ onSave, onCancel, currentCapacity, ma
               />
               {renderError('contactoEmergencia')}
             </div>
-
             <div style={styles.formGroup} className="span-3">
               <label htmlFor="condicion" style={styles.label}>Condiciones Particulares (Salud / Legal / Vulnerabilidad)</label>
               <textarea
                 id="condicion"
                 name="condicion"
-                maxLength="300" // Prevención de sobrecarga
+                maxLength="150" // Prevención de sobrecarga
                 value={formData.condicion}
                 onChange={handleChange}
                 className="form-control"
@@ -402,7 +368,6 @@ export default function RegisterResident({ onSave, onCancel, currentCapacity, ma
             </div>
           </div>
         </div>
-
         <div style={styles.section}>
           <h3 style={styles.sectionTitle}>3. Programación de Viaje (Opcional)</h3>
           <div className="grid-3-cols">
@@ -421,7 +386,6 @@ export default function RegisterResident({ onSave, onCancel, currentCapacity, ma
               />
               {renderError('destino')}
             </div>
-
             <div style={styles.formGroup}>
               <label htmlFor="viajeProgramado" style={styles.label}>Fecha Programada de Viaje</label>
               <input
@@ -437,7 +401,6 @@ export default function RegisterResident({ onSave, onCancel, currentCapacity, ma
             </div>
           </div>
         </div>
-
         <div style={styles.buttonContainer}>
           <button type="button" onClick={onCancel} className="btn btn-secondary">
             Cancelar
@@ -453,7 +416,6 @@ export default function RegisterResident({ onSave, onCancel, currentCapacity, ma
     </div>
   );
 }
-
 const styles = {
   container: {
     padding: '24px',

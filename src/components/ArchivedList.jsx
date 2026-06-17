@@ -1,13 +1,10 @@
 import React, { useState } from 'react';
 import { calculateDaysRefuged } from '../mockData';
 import { exportToPDF } from '../utils';
-
-
 export default function ArchivedList({ residents, onViewChange, onRestore, countries = [] }) {
   const handleResidentClick = (id) => {
     onViewChange({ name: 'details', params: { id, fromArchived: true } });
   };
-
   if (residents.length === 0) {
     return (
       <div style={styles.emptyState}>
@@ -21,13 +18,11 @@ export default function ArchivedList({ residents, onViewChange, onRestore, count
       </div>
     );
   }
-
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const totalPages = Math.ceil(residents.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedResidents = residents.slice(startIndex, startIndex + itemsPerPage); 
-
   return (
     <div style={styles.container} className="view-container mobile-padding">
       <div style={styles.header}>
@@ -153,7 +148,6 @@ export default function ArchivedList({ residents, onViewChange, onRestore, count
     </div>
   );
 }
-
 const styles = {
   container: {
     padding: '24px',
@@ -217,6 +211,8 @@ const styles = {
     fontSize: '0.9rem',
     color: 'var(--text-primary)',
     verticalAlign: 'middle',
+    wordBreak: 'break-word',
+    overflowWrap: 'break-word',
   },
   tableFamilyBadge: {
     backgroundColor: 'var(--bg-color)',

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import imagenDefault from '../assets/usuarioVacio.png';
-
 export default function ResidentDetails({ resident, onUpdate, onArchive, onRestore, onCancel, countries }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedData, setEditedData] = useState({ ...resident });
@@ -8,6 +7,7 @@ export default function ResidentDetails({ resident, onUpdate, onArchive, onResto
   
   // Estados para la nueva foto en modo edicion
   const [fotoFile, setFotoFile] = useState(null);
+  const [fotoError, setFotoError] = useState('');
   const [fotoPreview, setFotoPreview] = useState(
     resident?.fotoUrl 
       ? (resident.fotoUrl.startsWith('http') ? resident.fotoUrl : `https://martin.utportfolio.cloud/api/${resident.fotoUrl}`) 
@@ -15,7 +15,6 @@ export default function ResidentDetails({ resident, onUpdate, onArchive, onResto
   );
     // Estado para nuestro modal de confirmacion
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, type: null }); // type: 'archive' | 'restore'
-
   useEffect(() => {
     setEditedData({ ...resident });
     setFotoPreview(
@@ -25,14 +24,11 @@ export default function ResidentDetails({ resident, onUpdate, onArchive, onResto
   );
     setErrors({});
   }, [resident]);
-
   if (!resident) return null;
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setEditedData(prev => ({ ...prev, [name]: value }));
   };
-
   const handleFotoChange = (e) => {
     const file = e.target.files[0];
     setFotoError('');
@@ -42,38 +38,32 @@ export default function ResidentDetails({ resident, onUpdate, onArchive, onResto
       setFotoPreview(resident?.fotoUrl ? `https://martin.utportfolio.cloud/api/${resident.fotoUrl}` : imagenDefault);
       return;
     }
-
     const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
     if (!validTypes.includes(file.type)) {
       setFotoError('Formato invalido. Solo JPG o PNG.');
       e.target.value = '';
       return;
     }
-
     const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
       setFotoError('La imagen supera los 5MB.');
       e.target.value = ''; 
       return;
     }
-
     setFotoFile(file);
     setFotoPreview(URL.createObjectURL(file));
   };
-
 const handleSave = () => {
     const newErrors = {};
-
     // 1. Validar Nombre
     const nombreTrim = (editedData.nombre || '').trim();
     if (!nombreTrim) {
       newErrors.nombre = 'El nombre es obligatorio';
-    } else if (nombreTrim.length < 3 || nombreTrim.length > 100) {
-      newErrors.nombre = 'El nombre debe tener entre 3 y 100 caracteres';
+    } else if (nombreTrim.length < 3 || nombreTrim.length > 70) {
+      newErrors.nombre = 'El nombre debe tener entre 3 y 70 caracteres';
     } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombreTrim)) {
       newErrors.nombre = 'El nombre solo debe contener letras y espacios';
     }
-
     // 2. Validar Edad
     const edadNum = Number(editedData.edad);
     if (editedData.edad === '' || isNaN(edadNum)) {
@@ -81,26 +71,22 @@ const handleSave = () => {
     } else if (!Number.isInteger(edadNum) || edadNum < 0 || edadNum > 120) {
       newErrors.edad = 'La edad debe ser un número entero entre 0 y 120';
     }
-
     // 3. Validar Nacionalidad
     if (!editedData.nacionalidad || !editedData.nacionalidad.trim()) {
       newErrors.nacionalidad = 'La nacionalidad es obligatoria';
     }
-
     // 4. Validar Contacto de Emergencia (Opcional, pero con formato si se ingresa)
     const contactoTrim = (editedData.contactoEmergencia || '').trim();
     if (contactoTrim && !/^[0-9+\-\s()]{7,20}$/.test(contactoTrim)) {
       newErrors.contactoEmergencia = 'Formato de teléfono inválido';
     }
-
     // 5. Validar Destino y Condición (Límites de texto para no romper la BD)
     if (editedData.destino && editedData.destino.length > 150) {
       newErrors.destino = 'El texto es demasiado largo (máx 150 caracteres)';
     }
-    if (editedData.condicion && editedData.condicion.length > 300) {
-      newErrors.condicion = 'El texto es demasiado largo (máx 300 caracteres)';
+    if (editedData.condicion && editedData.condicion.length > 150) {
+      newErrors.condicion = 'El texto es demasiado largo (máx 150 caracteres)';
     }
-
     // 6. Validar Fechas (Viaje Programado vs Ingreso)
     if (editedData.viajeProgramado) {
       const fechaIngresoStr = editedData.fechaIngreso ? editedData.fechaIngreso.split('T')[0] : '';
@@ -109,19 +95,15 @@ const handleSave = () => {
         newErrors.viajeProgramado = 'El viaje no puede ser anterior al ingreso';
       }
     }
-
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
-
     setErrors({});
     onUpdate(editedData, fotoFile);
     setIsEditing(false);
   };
-
   const getStatusColor = (estado) => estado === 'activo' ? 'var(--secondary)' : 'var(--text-secondary)';
-
   return (
     <div className="fade-in" style={styles.container}>
       
@@ -192,7 +174,6 @@ const handleSave = () => {
           )}
         </div>
       </div>
-
       {/* Contenido Principal */}
       <div style={styles.card}>
         <div style={styles.profileSection} className="profile-section-responsive">
@@ -215,11 +196,10 @@ const handleSave = () => {
                {fotoError && <span style={styles.errorText}>{fotoError}</span>}
             </div>
           )}
-
           <div style={styles.profileInfo}>
             {isEditing ? (
               <>
-                <input type="text" name="nombre" value={editedData.nombre} onChange={handleInputChange} style={styles.inputTitle} className="input-title-responsive" />
+                <input type="text" name="nombre" maxLength="70" value={editedData.nombre} onChange={handleInputChange} style={styles.inputTitle} className="input-title-responsive" />
                 {errors.nombre && <span style={{ ...styles.errorText, display: 'block', marginBottom: '8px', textAlign: 'center' }}>{errors.nombre}</span>}
               </>
             ) : (
@@ -228,7 +208,6 @@ const handleSave = () => {
             <p style={styles.residentMeta}>ID Sistema: #{resident.id} • Registrado: {new Date(resident.fechaIngreso).toLocaleDateString()}</p>
           </div>
         </div>
-
         <div style={styles.grid}>
           {/* Datos Personales */}
           <div style={styles.section}>
@@ -273,7 +252,6 @@ const handleSave = () => {
               </div>
             </div>
           </div>
-
           {/* Grupo Familiar */}
           <div style={styles.section}>
             <h4 style={styles.sectionTitle}>
@@ -296,7 +274,6 @@ const handleSave = () => {
               </div>
             </div>
           </div>
-
           {/* Estado Medico */}
           <div style={styles.section}>
             <h4 style={styles.sectionTitle}>
@@ -306,10 +283,9 @@ const handleSave = () => {
               Condicion o Estado Medico
             </h4>
             <div style={styles.field}>
-              {isEditing ? <textarea name="condicion" maxLength="200" value={editedData.condicion || ''} onChange={handleInputChange} style={styles.textarea} rows="3" /> : <p style={styles.value}>{resident.condicion || 'Ninguna registrada'}</p>}
+              {isEditing ? <textarea name="condicion" maxLength="150" value={editedData.condicion || ''} onChange={handleInputChange} style={styles.textarea} rows="3" /> : <p style={styles.value}>{resident.condicion || 'Ninguna registrada'}</p>}
             </div>
           </div>
-
           {/* Estatus Migratorio */}
           <div style={styles.section}>
             <h4 style={styles.sectionTitle}>
@@ -338,7 +314,6 @@ const handleSave = () => {
           </div>
         </div>
       </div>
-
       {/* Modal de Confirmacion */}
       {confirmModal.isOpen && (
         <div style={styles.modalOverlay}>
@@ -377,11 +352,8 @@ const handleSave = () => {
       )}
     </div>
     </div>
-
   );
 }
-
-
 const styles = {
   container: {
     padding: '24px',
@@ -613,6 +585,9 @@ const styles = {
     padding: '10px 12px',
     borderRadius: '8px',
     border: '1px solid transparent',
+    wordBreak: 'break-word',
+    overflowWrap: 'break-word',
+    whiteSpace: 'pre-wrap',
   },
   input: {
     padding: '10px 12px',
