@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import imagenDefault from '../assets/usuarioVacio.png';
 
 export default function ResidentDetails({ resident, onUpdate, onArchive, onRestore, onCancel, countries }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -7,15 +8,14 @@ export default function ResidentDetails({ resident, onUpdate, onArchive, onResto
   
   // Estados para la nueva foto en modo edicion
   const [fotoFile, setFotoFile] = useState(null);
-  const [fotoPreview, setFotoPreview] = useState(resident?.fotoUrl || '/usuarioVacio.png');
-  const [fotoError, setFotoError] = useState('');
+const [fotoPreview, setFotoPreview] = useState(resident?.fotoUrl ? `https://martin.utportfolio.cloud/api/${resident.fotoUrl}` : imagenDefault);  const [fotoError, setFotoError] = useState('');
 
   // Estado para nuestro modal de confirmacion
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, type: null }); // type: 'archive' | 'restore'
 
   useEffect(() => {
     setEditedData({ ...resident });
-    setFotoPreview(resident?.fotoUrl || '/usuarioVacio.png');
+    setFotoPreview(resident?.fotoUrl ? `https://martin.utportfolio.cloud/api/${resident.fotoUrl}` : imagenDefault);
     setFotoFile(null);
     setErrors({});
   }, [resident]);
@@ -33,7 +33,7 @@ export default function ResidentDetails({ resident, onUpdate, onArchive, onResto
     
     if (!file) {
       setFotoFile(null);
-      setFotoPreview(resident?.fotoUrl || '/usuarioVacio.png');
+      setFotoPreview(resident?.fotoUrl ? `https://martin.utportfolio.cloud/api/${resident.fotoUrl}` : imagenDefault);
       return;
     }
 
@@ -157,7 +157,7 @@ export default function ResidentDetails({ resident, onUpdate, onArchive, onResto
             </>
           ) : (
             <>
-              <button onClick={() => { setIsEditing(false); setEditedData({...resident}); setFotoPreview(resident?.fotoUrl || '/usuarioVacio.png'); setFotoFile(null); setErrors({}); }} style={styles.cancelBtn}>
+              <button onClick={() => { setIsEditing(false); setEditedData({...resident}); setFotoPreview(resident?.fotoUrl ? `https://martin.utportfolio.cloud/api/${resident.fotoUrl}` : imagenDefault); setFotoFile(null); setErrors({}); }} style={styles.cancelBtn}>
                 Cancelar
               </button>
               <button onClick={handleSave} style={styles.saveBtn}>
@@ -177,8 +177,11 @@ export default function ResidentDetails({ resident, onUpdate, onArchive, onResto
       <div style={styles.card}>
         <div style={styles.profileSection} className="profile-section-responsive">
           <div style={styles.avatarWrapper}>
-            <img src={fotoPreview} alt="Foto del residente" style={styles.avatar} />
-          </div>
+            <img 
+              src={fotoPreview} 
+              alt="Foto del residente" 
+              style={styles.avatar}
+            />
           
           {isEditing && (
             <div style={styles.fotoUploadControls}>
@@ -353,8 +356,11 @@ export default function ResidentDetails({ resident, onUpdate, onArchive, onResto
         </div>
       )}
     </div>
+    </div>
+
   );
 }
+
 
 const styles = {
   container: {

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { loginAPI } from '../api'; // <-- Importamos nuestra conexión
+import { loginAPI } from '../api';
+import logoAlbergue from '../assets/logoSLRC.png';
+import fondoIglesia from '../assets/Iglesia_inmaculada_concepción_SLRC.jpg';
 
 export default function Login({ onLogin }) {
   const [username, setUsername] = useState('');
@@ -39,11 +41,10 @@ export default function Login({ onLogin }) {
       <div style={styles.loginBox}>
         <div style={styles.logoContainer}>
           <img 
-            src="/logoSLRC.png" 
+            src={logoAlbergue} 
             alt="Logo San Luis Río Colorado" 
             style={styles.logo}
             onError={(e) => {
-              // Fallback text if logo fails to load
               e.target.style.display = 'none';
             }}
           />
@@ -142,7 +143,7 @@ const styles = {
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundImage: 'url("/Iglesia_inmaculada_concepción_SLRC.jpg")',
+    backgroundImage: `url(${fondoIglesia})`,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     filter: 'scale(1.02)',
