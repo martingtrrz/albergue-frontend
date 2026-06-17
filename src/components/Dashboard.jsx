@@ -262,15 +262,8 @@ export default function Dashboard({ residents, onViewChange, countries = [] }) {
                       </svg>
                       F: {resident.familiaId || 'Individual'}
                     </span>
-                    
-                    {countryObj && (
-                      <img 
-                        src={resident.fotoUrl ? `https://martin.utportfolio.cloud/api/${resident.fotoUrl}` : imagenDefault} 
-                        alt="Foto" 
-                        style={styles.tableAvatar} // O la clase CSS que utilices
-                      />
-                    )}
-
+                  
+                  
                     <button 
                       style={styles.detailsBtn} 
                       onClick={(e) => {
@@ -286,7 +279,7 @@ export default function Dashboard({ residents, onViewChange, countries = [] }) {
                     {/* Photo area */}
                     <div style={styles.photoContainer}>
                       <img 
-                        src={resident.fotoUrl || '/usuarioVacio.png'}
+                        src={resident.fotoUrl ? `https://martin.utportfolio.cloud/api/${resident.fotoUrl}` : imagenDefault}
                         alt={resident.nombre} 
                         style={styles.photo} 
                       />

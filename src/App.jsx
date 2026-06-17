@@ -7,7 +7,8 @@ import ResidentDetails from './components/ResidentDetails';
 import RegisterResident from './components/RegisterResident';
 import ArchivedList from './components/ArchivedList';
 import countries from './components/paises.json';
-
+import logoAlbergue from './assets/logoSLRC.png';
+import imagenDefault from './assets/usuarioVacio.png';
 
 // Importamos todas nuestras conexiones reales a la API
 import { 
@@ -20,6 +21,8 @@ import {
   getFamiliasAPI,
   crearFamiliaAPI
 } from './api';
+
+
 
 export default function App() {
   const [user, setUser] = useState(() => {
@@ -224,14 +227,14 @@ export default function App() {
       {/* Header */}
       <header style={styles.header}>
         <div style={styles.headerLeft}>
-          <img src="/logoSLRC.png" alt="Logo SLRC" style={styles.headerLogo} />
+          <img src={logoAlbergue} alt="Logo SLRC" style={styles.headerLogo} />
           <div style={styles.headerDivider} className="hide-mobile"></div>
           <h1 style={styles.headerTitle} className="hide-mobile">Control del Albergue</h1>
         </div>
         
         <div style={styles.headerRight}>
           <div style={styles.adminInfo}>
-            <img src="/usuarioVacio.png" alt="Avatar Administrador" style={styles.adminAvatar} />
+            <img src={imagenDefault} alt="Avatar Administrador" style={styles.adminAvatar} />
             <div style={styles.adminText} className="hide-mobile">
               <span style={styles.adminName}>{user?.nombre || 'Administrador'}</span>
               <span style={styles.adminRole}>Ayuntamiento SLRC</span>
