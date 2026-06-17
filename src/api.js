@@ -4,11 +4,11 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 // Función para obtener los headers con el token guardado
 const getAuthHeaders = (isFormData = false) => {
   const token = localStorage.getItem('albergue_token');
+  
   const headers = {
     'Authorization': `Bearer ${token}`
   };
   
-  // Si NO estamos enviando un archivo (FormData), avisamos que enviamos JSON
   if (!isFormData) {
     headers['Content-Type'] = 'application/json';
   }
