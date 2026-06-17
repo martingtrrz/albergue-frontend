@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import CountrySelector from './CountrySelector';
+// 1. IMPORTACIÓN DE LA IMAGEN (Soluciona el error de Vite)
+import imagenDefault from '../assets/usuarioVacio.png';
 
 export default function RegisterResident({ onSave, onCancel, currentCapacity, maxCapacity = 50, countries = [], familias, onCrearFamilia }) {
   const [formData, setFormData] = useState({
@@ -18,7 +20,8 @@ export default function RegisterResident({ onSave, onCancel, currentCapacity, ma
   const [errors, setErrors] = useState({});
 
   const [fotoFile, setFotoFile] = useState(null);
-  const [fotoPreview, setFotoPreview] = useState('/usuarioVacio.png');
+  // 2. USO DE LA VARIABLE IMPORTADA SIN COMILLAS
+  const [fotoPreview, setFotoPreview] = useState(imagenDefault);
   const [fotoError, setFotoError] = useState('');
   const [showNuevaFamiliaForm, setShowNuevaFamiliaForm] = useState(false);
   const [nuevoCodigoFamilia, setNuevoCodigoFamilia] = useState('');
@@ -31,31 +34,30 @@ export default function RegisterResident({ onSave, onCancel, currentCapacity, ma
     // Si el usuario cancela la selección
     if (!file) {
       setFotoFile(null);
-      setFotoPreview('/usuarioVacio.png');
+      setFotoPreview(imagenDefault); // Cambio aquí
       return;
     }
 
-    // 1. Validar formato (Solo JPG y PNG)
+    // Validar formato
     const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
     if (!validTypes.includes(file.type)) {
       setFotoError('Formato inválido. Solo se permiten imágenes JPG o PNG.');
       setFotoFile(null);
-      setFotoPreview('/usuarioVacio.png');
-      e.target.value = ''; // Limpiar el input
-      return;
-    }
-
-    // 2. Validar peso máximo (Opcional, configurado a 5MB)
-    const maxSize = 5 * 1024 * 1024;
-    if (file.size > maxSize) {
-      setFotoError('La imagen es muy pesada. El tamaño máximo es de 5MB.');
-      setFotoFile(null);
-      setFotoPreview('/usuarioVacio.png');
+      setFotoPreview(imagenDefault); // Cambio aquí
       e.target.value = ''; 
       return;
     }
 
-    // Si pasa las validaciones, la guardamos y creamos una previsualización
+    // Validar peso máximo (5MB)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      setFotoError('La imagen es muy pesada. El tamaño máximo es de 5MB.');
+      setFotoFile(null);
+      setFotoPreview(imagenDefault); // Cambio aquí
+      e.target.value = ''; 
+      return;
+    }
+
     setFotoFile(file);
     setFotoPreview(URL.createObjectURL(file));
   };
@@ -75,36 +77,33 @@ export default function RegisterResident({ onSave, onCancel, currentCapacity, ma
     e.preventDefault();
 
     if (currentCapacity >= maxCapacity) {
-      showNotification('El albergue ha alcanzado su capacidad máxima (50/50). Dé de baja a un residente activo antes de reingresar a otra persona.', 'error');
+      alert('El albergue ha alcanzado su capacidad máxima (50/50). Dé de baja a un residente activo antes de ingresar a otra persona.');
       return;
     }
 
     const newErrors = {};
 
-    // Validar nombre
+    // 3. VALIDACIONES ESTRICTAS JS
     const nombreTrim = formData.nombre.trim();
     if (!nombreTrim) {
       newErrors.nombre = 'El nombre es obligatorio';
-    } else if (nombreTrim.length < 3) {
-      newErrors.nombre = 'El nombre debe tener al menos 3 caracteres';
+    } else if (nombreTrim.length < 3 || nombreTrim.length > 100) {
+      newErrors.nombre = 'El nombre debe tener entre 3 y 100 caracteres';
     } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombreTrim)) {
       newErrors.nombre = 'El nombre solo debe contener letras y espacios';
     }
 
-    // Validar edad
     const edadNum = Number(formData.edad);
     if (formData.edad === '' || isNaN(edadNum)) {
       newErrors.edad = 'La edad es obligatoria';
-    } else if (edadNum < 0 || edadNum > 120) {
-      newErrors.edad = 'La edad debe estar entre 0 y 120 años';
+    } else if (!Number.isInteger(edadNum) || edadNum < 0 || edadNum > 120) {
+      newErrors.edad = 'La edad debe ser un número entero entre 0 y 120';
     }
 
-    // Validar nacionalidad
     if (!formData.nacionalidad || !formData.nacionalidad.trim()) {
       newErrors.nacionalidad = 'La nacionalidad es obligatoria';
     }
 
-    // Validar fecha de ingreso (no puede ser en el futuro)
     if (!formData.fechaIngreso) {
       newErrors.fechaIngreso = 'La fecha de ingreso es obligatoria';
     } else {
@@ -114,7 +113,19 @@ export default function RegisterResident({ onSave, onCancel, currentCapacity, ma
       }
     }
 
-    // Validar fecha de viaje programada
+    const contactoTrim = (formData.contactoEmergencia || '').trim();
+    if (contactoTrim && !/^[0-9+\-\s()]{7,20}$/.test(contactoTrim)) {
+      newErrors.contactoEmergencia = 'Formato de teléfono inválido';
+    }
+
+    if (formData.destino && formData.destino.length > 150) {
+      newErrors.destino = 'El texto es demasiado largo (máx 150 caracteres)';
+    }
+
+    if (formData.condicion && formData.condicion.length > 300) {
+      newErrors.condicion = 'El texto es demasiado largo (máx 300 caracteres)';
+    }
+
     if (formData.viajeProgramado) {
       if (formData.fechaIngreso && formData.viajeProgramado < formData.fechaIngreso) {
         newErrors.viajeProgramado = 'La fecha de viaje no puede ser anterior al ingreso';
@@ -136,6 +147,21 @@ export default function RegisterResident({ onSave, onCancel, currentCapacity, ma
     onSave(residentToSave, fotoFile);
   };
 
+  // Función auxiliar para renderizar los errores con el icono SVG
+  const renderError = (field) => {
+    if (!errors[field]) return null;
+    return (
+      <span style={styles.errorText}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '4px', verticalAlign: 'middle' }}>
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        {errors[field]}
+      </span>
+    );
+  };
+
   return (
     <div style={styles.container} className="view-container mobile-padding">
       <div style={styles.header}>
@@ -147,40 +173,39 @@ export default function RegisterResident({ onSave, onCancel, currentCapacity, ma
           Capacidad actual: <strong style={{ color: currentCapacity >= maxCapacity ? 'var(--error-color)' : 'var(--success-color)' }}>{currentCapacity} / {maxCapacity}</strong>
         </div>
       </div>
-<div style={styles.detailsGroup}>
-  <h3 style={styles.groupTitle}>Fotografía del Residente (Opcional)</h3>
-  <div style={{ display: 'flex', alignItems: 'center', gap: '24px', marginBottom: '16px' }}>
-    
-    <div style={styles.avatarWrapper}>
-      <img src={fotoPreview} alt="Vista previa" style={styles.avatarImg} />
-    </div>
+      
+      <div style={styles.detailsGroup}>
+        <h3 style={styles.groupTitle}>Fotografía del Residente (Opcional)</h3>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '24px', marginBottom: '16px' }}>
+          <div style={styles.avatarWrapper}>
+            <img src={fotoPreview} alt="Vista previa" style={styles.avatarImg} />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <label style={styles.uploadButton}>
+              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+              </svg>
+              Seleccionar Foto
+              <input 
+                type="file" 
+                accept="image/jpeg, image/png" 
+                onChange={handleFotoChange} 
+                style={{ display: 'none' }} 
+              />
+            </label>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+              Formatos aceptados: JPG, PNG.
+            </span>
+            {fotoError && (
+              <span style={{ color: 'var(--error-color)', fontSize: '0.85rem', fontWeight: '600' }}>
+                {fotoError}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
 
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-      <label style={styles.uploadButton}>
-        <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
-        </svg>
-        Seleccionar Foto
-        <input 
-          type="file" 
-          accept="image/jpeg, image/png, image/jpg" 
-          onChange={handleFotoChange} 
-          style={{ display: 'none' }} 
-        />
-      </label>
-      <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-        Formatos aceptados: JPG, PNG.
-      </span>
-      {fotoError && (
-        <span style={{ color: 'var(--error-color)', fontSize: '0.85rem', fontWeight: '600' }}>
-          {fotoError}
-        </span>
-      )}
-    </div>
-  </div>
-</div>
       <form onSubmit={handleSubmit} style={styles.form}>
-        {/* Sección 1: Datos Personales */}
         <div style={styles.section}>
           <h3 style={styles.sectionTitle}>1. Datos Personales</h3>
           <div className="grid-3-cols">
@@ -190,13 +215,14 @@ export default function RegisterResident({ onSave, onCancel, currentCapacity, ma
                 type="text"
                 id="nombre"
                 name="nombre"
+                maxLength="100" // Restricción HTML
                 value={formData.nombre}
                 onChange={handleChange}
                 className="form-control"
                 style={{ borderColor: errors.nombre ? 'var(--error-color)' : '' }}
                 placeholder="Ej. Juan Carlos Pérez Martínez"
               />
-              {errors.nombre && <span style={styles.errorText}>{errors.nombre}</span>}
+              {renderError('nombre')}
             </div>
 
             <div style={styles.formGroup}>
@@ -220,18 +246,18 @@ export default function RegisterResident({ onSave, onCancel, currentCapacity, ma
                 type="number"
                 id="edad"
                 name="edad"
+                min="0"
+                max="120"
+                step="1" // Forzar enteros en la interfaz
                 value={formData.edad}
                 onChange={handleChange}
                 className="form-control"
                 style={{ borderColor: errors.edad ? 'var(--error-color)' : '' }}
-                min="0"
-                max="120"
                 placeholder="Ej. 28"
               />
-              {errors.edad && <span style={styles.errorText}>{errors.edad}</span>}
+              {renderError('edad')}
             </div>
 
-            {/* ── Nacionalidad con buscador ── */}
             <div style={styles.formGroup}>
               <label style={styles.label}>Nacionalidad *</label>
               <CountrySelector
@@ -241,93 +267,92 @@ export default function RegisterResident({ onSave, onCancel, currentCapacity, ma
                 hasError={!!errors.nacionalidad}
                 inputStyle={{}}
               />
-              {errors.nacionalidad && <span style={styles.errorText}>{errors.nacionalidad}</span>}
+              {renderError('nacionalidad')}
             </div>
 
-            {/* Selector de Familia Dinamico */}
-<div style={styles.field}>
-  <label style={styles.fieldLabel}>Familia / Grupo</label>
-  <select
-    name="familiaId"
-    value={showNuevaFamiliaForm ? 'NEW_FAMILY' : (formData.familiaId || '')}
-    onChange={(e) => {
-      if (e.target.value === 'NEW_FAMILY') {
-        setShowNuevaFamiliaForm(true);
-        setFormData(prev => ({ ...prev, familiaId: '' }));
-      } else {
-        setShowNuevaFamiliaForm(false);
-        setFormData(prev => ({ ...prev, familiaId: e.target.value }));
-      }
-    }}
-    className="form-control"
-  >
-    <option value="">Individual (Ninguno)</option>
-    {familias?.map(f => (
-      <option key={f.id} value={f.id}>{f.codigo_familia}</option>
-    ))}
-    <option value="NEW_FAMILY" style={{ fontWeight: 'bold', color: 'var(--primary-dark)' }}>
-      + Registrar una nueva familia...
-    </option>
-  </select>
-</div>
+            <div style={styles.field}>
+              <label style={styles.fieldLabel}>Familia / Grupo</label>
+              <select
+                name="familiaId"
+                value={showNuevaFamiliaForm ? 'NEW_FAMILY' : (formData.familiaId || '')}
+                onChange={(e) => {
+                  if (e.target.value === 'NEW_FAMILY') {
+                    setShowNuevaFamiliaForm(true);
+                    setFormData(prev => ({ ...prev, familiaId: '' }));
+                  } else {
+                    setShowNuevaFamiliaForm(false);
+                    setFormData(prev => ({ ...prev, familiaId: e.target.value }));
+                  }
+                }}
+                className="form-control"
+              >
+                <option value="">Individual (Ninguno)</option>
+                {familias?.map(f => (
+                  <option key={f.id} value={f.id}>{f.codigo_familia}</option>
+                ))}
+                <option value="NEW_FAMILY" style={{ fontWeight: 'bold', color: 'var(--primary-dark)' }}>
+                  + Registrar una nueva familia...
+                </option>
+              </select>
+            </div>
 
-{/* Sub-formulario condicional si eligen registrar nueva familia */}
-{showNuevaFamiliaForm && (
-  <div style={styles.newFamilyBox} className="fade-in">
-    <h4 style={styles.newFamilyTitle}>Datos de la Nueva Familia</h4>
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-      <div>
-        <label style={styles.fieldLabel}>Codigo de Familia (Ej: FAM-100)</label>
-        <input 
-          type="text" 
-          value={nuevoCodigoFamilia} 
-          onChange={(e) => setNuevoCodigoFamilia(e.target.value.toUpperCase())}
-          className="form-control"
-          placeholder="Escribe el codigo identificador"
-        />
-      </div>
-      <div>
-        <label style={styles.fieldLabel}>Notas de la Familia</label>
-        <textarea 
-          value={nuevasNotasFamilia} 
-          onChange={(e) => setNuevasNotasFamilia(e.target.value)}
-          className="form-control"
-          placeholder="Notas o procedencia del grupo familiar"
-          rows="2"
-        />
-      </div>
-      <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-        <button 
-          type="button" 
-          onClick={() => { setShowNuevaFamiliaForm(false); setNuevoCodigoFamilia(''); setNuevasNotasFamilia(''); }}
-          style={styles.btnSmallSecondary}
-        >
-          Cancelar
-        </button>
-        <button 
-          type="button" 
-          onClick={async () => {
-            if(!nuevoCodigoFamilia.trim()) return alert('El codigo de familia es obligatorio');
-            const nuevoId = await onCrearFamilia(nuevoCodigoFamilia, nuevasNotasFamilia);
-            if(nuevoId) {
-              setFormData(prev => ({ ...prev, familiaId: nuevoId }));
-              setShowNuevaFamiliaForm(false);
-              setNuevoCodigoFamilia('');
-              setNuevasNotasFamilia('');
-            }
-          }}
-          style={styles.btnSmallPrimary}
-        >
-          Crear y Asignar
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+            {showNuevaFamiliaForm && (
+              <div style={styles.newFamilyBox} className="fade-in">
+                <h4 style={styles.newFamilyTitle}>Datos de la Nueva Familia</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <div>
+                    <label style={styles.fieldLabel}>Código de Familia (Ej: FAM-100)</label>
+                    <input 
+                      type="text" 
+                      maxLength="50"
+                      value={nuevoCodigoFamilia} 
+                      onChange={(e) => setNuevoCodigoFamilia(e.target.value.toUpperCase())}
+                      className="form-control"
+                      placeholder="Escribe el código identificador"
+                    />
+                  </div>
+                  <div>
+                    <label style={styles.fieldLabel}>Notas de la Familia</label>
+                    <textarea 
+                      maxLength="200"
+                      value={nuevasNotasFamilia} 
+                      onChange={(e) => setNuevasNotasFamilia(e.target.value)}
+                      className="form-control"
+                      placeholder="Notas o procedencia del grupo familiar"
+                      rows="2"
+                    />
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                    <button 
+                      type="button" 
+                      onClick={() => { setShowNuevaFamiliaForm(false); setNuevoCodigoFamilia(''); setNuevasNotasFamilia(''); }}
+                      style={styles.btnSmallSecondary}
+                    >
+                      Cancelar
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={async () => {
+                        if(!nuevoCodigoFamilia.trim()) return alert('El código de familia es obligatorio');
+                        const nuevoId = await onCrearFamilia(nuevoCodigoFamilia, nuevasNotasFamilia);
+                        if(nuevoId) {
+                          setFormData(prev => ({ ...prev, familiaId: nuevoId }));
+                          setShowNuevaFamiliaForm(false);
+                          setNuevoCodigoFamilia('');
+                          setNuevasNotasFamilia('');
+                        }
+                      }}
+                      style={styles.btnSmallPrimary}
+                    >
+                      Crear y Asignar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Sección 2: Expediente e Ingreso */}
         <div style={styles.section}>
           <h3 style={styles.sectionTitle}>2. Expediente e Ingreso</h3>
           <div className="grid-3-cols">
@@ -342,20 +367,23 @@ export default function RegisterResident({ onSave, onCancel, currentCapacity, ma
                 className="form-control"
                 style={{ borderColor: errors.fechaIngreso ? 'var(--error-color)' : '' }}
               />
-              {errors.fechaIngreso && <span style={styles.errorText}>{errors.fechaIngreso}</span>}
+              {renderError('fechaIngreso')}
             </div>
 
             <div style={styles.formGroup}>
               <label htmlFor="contactoEmergencia" style={styles.label}>Contacto de Emergencia</label>
               <input
-                type="text"
+                type="tel" // Adaptación para teclados móviles
+                maxLength="20"
                 id="contactoEmergencia"
                 name="contactoEmergencia"
                 value={formData.contactoEmergencia}
                 onChange={handleChange}
                 className="form-control"
-                placeholder="Teléfono y nombre de contacto"
+                style={{ borderColor: errors.contactoEmergencia ? 'var(--error-color)' : '' }}
+                placeholder="Ej. +52 653 123 4567"
               />
+              {renderError('contactoEmergencia')}
             </div>
 
             <div style={styles.formGroup} className="span-3">
@@ -363,16 +391,18 @@ export default function RegisterResident({ onSave, onCancel, currentCapacity, ma
               <textarea
                 id="condicion"
                 name="condicion"
+                maxLength="300" // Prevención de sobrecarga
                 value={formData.condicion}
                 onChange={handleChange}
                 className="form-control"
+                style={{ borderColor: errors.condicion ? 'var(--error-color)' : '' }}
                 placeholder="Describa si el residente tiene alguna condición médica, discapacidad, estado de vulnerabilidad o requerimientos especiales..."
               />
+              {renderError('condicion')}
             </div>
           </div>
         </div>
 
-        {/* Sección 3: Programación de Viaje */}
         <div style={styles.section}>
           <h3 style={styles.sectionTitle}>3. Programación de Viaje (Opcional)</h3>
           <div className="grid-3-cols">
@@ -382,11 +412,14 @@ export default function RegisterResident({ onSave, onCancel, currentCapacity, ma
                 type="text"
                 id="destino"
                 name="destino"
+                maxLength="150"
                 value={formData.destino}
                 onChange={handleChange}
                 className="form-control"
+                style={{ borderColor: errors.destino ? 'var(--error-color)' : '' }}
                 placeholder="Ej. Tucson, Arizona, USA"
               />
+              {renderError('destino')}
             </div>
 
             <div style={styles.formGroup}>
@@ -398,12 +431,13 @@ export default function RegisterResident({ onSave, onCancel, currentCapacity, ma
                 value={formData.viajeProgramado}
                 onChange={handleChange}
                 className="form-control"
+                style={{ borderColor: errors.viajeProgramado ? 'var(--error-color)' : '' }}
               />
+              {renderError('viajeProgramado')}
             </div>
           </div>
         </div>
 
-        {/* Botones */}
         <div style={styles.buttonContainer}>
           <button type="button" onClick={onCancel} className="btn btn-secondary">
             Cancelar
@@ -473,7 +507,6 @@ const styles = {
     borderBottom: '1px solid var(--border-color)',
     paddingBottom: '8px',
   },
- 
   formGroup: {
     display: 'flex',
     flexDirection: 'column',
@@ -495,10 +528,6 @@ const styles = {
     fontFamily: 'var(--font-family)',
     transition: 'var(--transition-smooth)',
     outline: 'none',
-    '&:focus': {
-      borderColor: 'var(--primary-dark)',
-      backgroundColor: '#ffffff',
-    }
   },
   select: {
     padding: '12px 14px',
@@ -525,9 +554,10 @@ const styles = {
   },
   errorText: {
     color: 'var(--error-color)',
-    fontSize: '0.78rem',
+    fontSize: '0.8rem',
     fontWeight: '600',
-    marginTop: '4px',
+    marginTop: '6px',
+    display: 'block',
   },
   buttonContainer: {
     display: 'flex',

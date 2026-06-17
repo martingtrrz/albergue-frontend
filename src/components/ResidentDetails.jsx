@@ -55,38 +55,52 @@ const [fotoPreview, setFotoPreview] = useState(resident?.fotoUrl ? `https://mart
     setFotoPreview(URL.createObjectURL(file));
   };
 
-  const handleSave = () => {
+const handleSave = () => {
     const newErrors = {};
 
-    // Validar nombre
+    // 1. Validar Nombre
     const nombreTrim = (editedData.nombre || '').trim();
     if (!nombreTrim) {
       newErrors.nombre = 'El nombre es obligatorio';
-    } else if (nombreTrim.length < 3) {
-      newErrors.nombre = 'El nombre debe tener al menos 3 caracteres';
+    } else if (nombreTrim.length < 3 || nombreTrim.length > 100) {
+      newErrors.nombre = 'El nombre debe tener entre 3 y 100 caracteres';
     } else if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(nombreTrim)) {
       newErrors.nombre = 'El nombre solo debe contener letras y espacios';
     }
 
-    // Validar edad
+    // 2. Validar Edad
     const edadNum = Number(editedData.edad);
     if (editedData.edad === '' || isNaN(edadNum)) {
       newErrors.edad = 'La edad es obligatoria';
-    } else if (edadNum < 0 || edadNum > 120) {
-      newErrors.edad = 'La edad debe estar entre 0 y 120 años';
+    } else if (!Number.isInteger(edadNum) || edadNum < 0 || edadNum > 120) {
+      newErrors.edad = 'La edad debe ser un número entero entre 0 y 120';
     }
 
-    // Validar nacionalidad
+    // 3. Validar Nacionalidad
     if (!editedData.nacionalidad || !editedData.nacionalidad.trim()) {
       newErrors.nacionalidad = 'La nacionalidad es obligatoria';
     }
 
-    // Validar fecha de viaje programada
+    // 4. Validar Contacto de Emergencia (Opcional, pero con formato si se ingresa)
+    const contactoTrim = (editedData.contactoEmergencia || '').trim();
+    if (contactoTrim && !/^[0-9+\-\s()]{7,20}$/.test(contactoTrim)) {
+      newErrors.contactoEmergencia = 'Formato de teléfono inválido';
+    }
+
+    // 5. Validar Destino y Condición (Límites de texto para no romper la BD)
+    if (editedData.destino && editedData.destino.length > 150) {
+      newErrors.destino = 'El texto es demasiado largo (máx 150 caracteres)';
+    }
+    if (editedData.condicion && editedData.condicion.length > 300) {
+      newErrors.condicion = 'El texto es demasiado largo (máx 300 caracteres)';
+    }
+
+    // 6. Validar Fechas (Viaje Programado vs Ingreso)
     if (editedData.viajeProgramado) {
       const fechaIngresoStr = editedData.fechaIngreso ? editedData.fechaIngreso.split('T')[0] : '';
       const viajeProgramadoStr = editedData.viajeProgramado.split('T')[0];
       if (fechaIngresoStr && viajeProgramadoStr < fechaIngresoStr) {
-        newErrors.viajeProgramado = 'La fecha de viaje no puede ser anterior al ingreso';
+        newErrors.viajeProgramado = 'El viaje no puede ser anterior al ingreso';
       }
     }
 
@@ -224,7 +238,7 @@ const [fotoPreview, setFotoPreview] = useState(resident?.fotoUrl ? `https://mart
                 <label style={styles.label}>Edad</label>
                 {isEditing ? (
                   <>
-                    <input type="number" name="edad" value={editedData.edad} onChange={handleInputChange} style={styles.input} />
+                    <input type="number" name="edad" min="0" max="120" step="1" value={editedData.edad} onChange={handleInputChange} style={styles.input} />
                     {errors.edad && <span style={styles.errorText}>{errors.edad}</span>}
                   </>
                 ) : <p style={styles.value}>{resident.edad} anos</p>}
@@ -272,7 +286,7 @@ const [fotoPreview, setFotoPreview] = useState(resident?.fotoUrl ? `https://mart
               </div>
               <div style={styles.field}>
                 <label style={styles.label}>Contacto de Emergencia</label>
-                {isEditing ? <input type="text" name="contactoEmergencia" value={editedData.contactoEmergencia || ''} onChange={handleInputChange} style={styles.input} /> : <p style={styles.value}>{resident.contactoEmergencia || 'No registrado'}</p>}
+                {isEditing ? <input type="text" name="contactoEmergencia" maxLength="15" value={editedData.contactoEmergencia || ''} onChange={handleInputChange} style={styles.input} /> : <p style={styles.value}>{resident.contactoEmergencia || 'No registrado'}</p>}
               </div>
             </div>
           </div>
@@ -286,7 +300,7 @@ const [fotoPreview, setFotoPreview] = useState(resident?.fotoUrl ? `https://mart
               Condicion o Estado Medico
             </h4>
             <div style={styles.field}>
-              {isEditing ? <textarea name="condicion" value={editedData.condicion || ''} onChange={handleInputChange} style={styles.textarea} rows="3" /> : <p style={styles.value}>{resident.condicion || 'Ninguna registrada'}</p>}
+              {isEditing ? <textarea name="condicion" maxLength="200" value={editedData.condicion || ''} onChange={handleInputChange} style={styles.textarea} rows="3" /> : <p style={styles.value}>{resident.condicion || 'Ninguna registrada'}</p>}
             </div>
           </div>
 
@@ -303,7 +317,7 @@ const [fotoPreview, setFotoPreview] = useState(resident?.fotoUrl ? `https://mart
             <div style={styles.fieldGroup}>
               <div style={styles.field}>
                 <label style={styles.label}>Destino Planeado</label>
-                {isEditing ? <input type="text" name="destino" value={editedData.destino || ''} onChange={handleInputChange} style={styles.input} /> : <p style={styles.value}>{resident.destino || 'No especificado'}</p>}
+                {isEditing ? <input type="text" name="destino" maxLength="100" value={editedData.destino || ''} onChange={handleInputChange} style={styles.input} /> : <p style={styles.value}>{resident.destino || 'No especificado'}</p>}
               </div>
               <div style={styles.field}>
                 <label style={styles.label}>Fecha de Viaje Programada</label>
